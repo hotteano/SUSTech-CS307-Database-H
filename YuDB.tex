@@ -1,0 +1,230 @@
+\documentclass[12pt,a4paper,UTF8]{ctexbook}
+\usepackage[top=2cm, bottom=3cm, left=2.5cm, right=2.5cm]{geometry} % 页边距
+\usepackage{amsmath,amssymb}    % 数学公式
+\usepackage{graphicx}           % 图片插入
+\usepackage{booktabs}           % 专业表格
+\usepackage{multirow}            % 表格跨行
+\usepackage{listings}
+\usepackage{bussproofs}
+\usepackage{tikz}
+\usepackage{multirow}   % 合并行
+\usepackage{hhline}     % 绘制自定义水平线
+\usepackage{array}      % 调整列格式
+\usepackage[colorlinks=true]{hyperref} % 超链接
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{mathpartir}
+\usepackage{amsthm}
+\usepackage{longtable}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{algorithmicx}
+\theoremstyle{plain}
+\newtheorem{theorem}{\indent Theorem}[chapter]
+\newtheorem{lemma}[theorem]{\indent Lemma}
+\newtheorem{conjecture}[theorem]{\indent Conjecture}
+\newtheorem{note}[theorem]{\indent Notation}
+\newtheorem{proposition}[theorem]{\indent Proposition}
+\newtheorem{corollary}[theorem]{\indent 推论}
+\newtheorem{definition}{\indent Definition}[chapter]
+\newtheorem{example}{\indent Example}[chapter]
+\newtheorem{remark}{\indent Remark}[chapter]
+\newenvironment{solution}{\begin{proof}[\indent\bf Solution]}{\end{proof}}
+\renewcommand{\proofname}{\indent\bf Proof}
+\lstset{
+ language=sql, % 设置语言
+ basicstyle=\ttfamily, % 设置字体族
+ breaklines=true, % 自动换行
+ keywordstyle=\bfseries\color{Aquamarine}, % 设置关键字为粗体，颜色为 NavyBlue
+ morekeywords={}, % 设置更多的关键字，用逗号分隔
+ emph={self}, % 指定强调词，如果有多个，用逗号隔开
+    emphstyle=\bfseries\color{Rhodamine}, % 强调词样式设置
+    commentstyle=\itshape\color{black!50!white}, % 设置注释样式，斜体，浅灰色
+    stringstyle=\bfseries\color{PineGreen!90!black}, % 设置字符串样式
+    columns=flexible,
+    numbers=left, % 显示行号在左边
+    numbersep=2em, % 设置行号的具体位置
+    numberstyle=\footnotesize, % 缩小行号
+    frame=single, % 边框
+    framesep=1em % 设置代码与边框的距离
+}
+\def\ctime{\bf{TIME}}
+\def\cspace{\bf{SPACE}}
+\def\ncone{\bf{NC^1}}
+\def\logsp{\bf{L}}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+
+\title{\bf{Introduction to Database (H)}}
+\author{Yanqiao Chen, SUSTech, Shenzhen\\
+        Instructor: Shiqi Yu}
+
+\begin{document}
+\setlength{\arrayrulewidth}{0.4pt}
+\newcommand{\thickline}{\noalign{\hrule height 2pt}}
+
+\maketitle
+\tableofcontents
+
+\chapter{数据库引论} 
+
+\section{数据库历史}
+\subsection{为什么需要数据库？} 
+我们需要管理数据，查询、修改数据，同时需要管理多个用户读写的并发问题，因此需要开发一套合适的数据库
+系统进行数据管理。 
+
+\subsection{关系数据库} 
+Edgar Codd在1970年代提出的关系模型，为后续关系数据库的开发奠定了基础。关系数据库 
+的最小单位是“行”，再上面还有页（Page）、表（Table）。关系数据库中存在很多操作，一些基本操作是：
+\begin{itemize} 
+    \item select（$\sigma_{P}(tag)$）: 取出符合输入关系满足谓词的行；
+    \item project（$\Pi_{tag1, tag2}(tag)$）: 对输入关系所有的行输出指定的属性。从输出中取出重复元组。
+    \item join: 输出两个输入关系中元组的并。
+    \item product: 从两个输入关系中输出所有元组对；
+    \item concat: 从两个输入关系输出这样的元组对：它们在具有相同名字的所有属性上取值相同。
+\end{itemize} 
+数据库中，每一行本质上是没有顺序的，也就是一个集合（无序、不重合）。为了区分每一个数据，我们
+为每一个数据定义一个键值（Key）： 
+\begin{definition}[键值] 
+    键值是识别一条数据的唯一表示，可以是对于某些数据的哈希值，或者是按照初次写入顺序的标号。总而言之，
+    键值必须要是独一无二的。
+\end{definition}
+
+\begin{remark}[Primary Key]
+    我们可能使用很多键值，但是我们可以选出一个基本的键值作为“Primary Key”。一般来说，我们使用整数来进行标号。
+\end{remark} 
+
+对于很多数据的写法，我们需要对数据进行规范化，方便进行查询和修改。
+\begin{definition}[规范化]
+    对于指示同一个属性的标签，标签可能有很多种写法。同样，数据的标签可能根本不存在。我们在设计相关的
+    标签的时候要考虑到这一点。
+\end{definition} 
+例如，汉族人通常有姓和名，但是其它民族的人可能没有姓氏，外国人可能存在姓名倒置，可能存在昵称等等。这里，
+我们需要设计一些机制对标签进行规范化。
+
+\begin{example}
+    例如，可以将另一个表的索引作为标签，从而化简一张表上的数据储存。
+\end{example}
+
+\begin{example}
+    还可以，我们将不同类型的数据分开存，通过第三张表记录它们的关系。这就是关系数据库的基本思想。
+\end{example}
+
+
+表的关系可以视为一张无向图。
+
+\subsection{范式} 
+在设计数据库的过程中，我们往往遵循一些工程范式。
+\begin{itemize} 
+    \item Simple Attribute（属性原子化）;
+    \item Attribute depend on Full Key（属性描述键）;
+    \item Non-Key Attribute do not depend on each other（属性不相关）;
+\end{itemize} 
+
+
+\chapter{SQL语句}
+SQL语言在不同的数据库中都会有些许不同，这被称为SQL方言。因此，我们在使用对应的数据库的时候，都需要进行
+一定程度上的DIY。SQL是大小写不敏感的，但是尽量使用大写标识关键字，小写标识标识符（注意，数据大小写有别）。
+\section{C/S结构}
+我们所安装的Postgre是一个数据库服务器（Server），我们需要通过客户端（Client）访问服务器。
+首先，我们通过服务器与服务器端口建立连接，通过用户名和密码登入服务器。然后，我们通过客户端的
+图形界面输入SQL语言与服务器进行交互。我们的执行顺序如下：
+\begin{itemize} 
+    \item 客户端输入SQL查询（或者数据处理）命令
+    \item 服务器接受SQL命令，挂起事务，检查权限，处理数据，发回客户端；
+    \item 客户端接收服务器的数据；
+\end{itemize}
+
+\section{SQL语句标准} 
+每一个SQL语句由一个命令序列，一个命令是一个记号序列（记号可以是一个关键字、一个标识符、一个带引号的标识符、一个literal或者常量、一个特殊字符）并且由一个分号终结。
+
+
+\section{DDL语句} 
+
+\subsection{CREATE}
+CREATE语句用于创建表、行等等。在创建表的过程中，每一列的属性具有特定的类型，例如整数、
+字符串等等。SQL的数据类型包含
+\begin{itemize} 
+  \item \textbf{Text}: \textbf{char(length)} ,\textbf{char}默认长度为1, \textbf{varchar}（可变长度，不超过最长长度）, \textbf{clob}, \textbf{varchar2}(Oracle方言);
+  \item \textbf{Number}: \textbf{int}, \textbf{float}（浮点数的数字标识范围大于其位宽，易出错）, \textbf{numeric(精确位, 小数位)}（精确数值类型）;
+  \item \textbf{Date}: \textbf{date}（Oracle方言）, \textbf{datetime}, \textbf{timestamp};
+  \item \textbf{Binary}: \textbf{raw(max length)}, \textbf{varbinary(max length)}, \textbf{blob}, \textbf{bytea}.
+\end{itemize}
+CREATE TABLE语句的基本形式如下：
+\begin{lstlisting} 
+CREATE TABLE 表名(
+    标识符 类型 (not null，如果不能留空) (primary key，隐式not null，不重复，只有一个),
+    check(条件) ,
+    标识符 类型 ,
+    ……
+    unique(标识符，标识符)
+);
+\end{lstlisting}
+\paragraph{Constraint} 创建表的时候，我们可以添加一系列限制来规范输入：
+\begin{itemize} 
+    \item \textbf{not null}: 附加在标识符之后，表示填入数据列不得为null；
+    \item \textbf{primary key}: 附加在标识符后，隐含not null和unique；单独成行可以标记基本键值元组；
+    \item \textbf{check}: 添加在标识符后方，多个用逗号分隔: check(bool expr)； 
+    \item \textbf{unique}: 用逗号分隔，可以限制单个元素唯一，也可以限制某一个元组唯一；或者，直接加在标识符后方； 
+    \item \textbf{constraint}: 若独立成行，可以标记外键（constraint 限制名 foreign key(外键名) references 表名(键名)）；
+                               总之是用来命名“限制”的；
+    \item \textbf{foreign key}: 标准语法是：foreign key 键或者元组 references 表名（键或者元组）；
+    \item \textbf{default}: 附加在键后面，表示若没有显式初始化，则直接初始化为此值；
+    \item \textbf{references}: 附加在键后面可以表示参考的外部键值是什么，保持内外一致；
+\end{itemize} 
+
+\subsection{Null} 
+Null指的是“不存在值”，与其它编程语言不同，不能够运算。
+
+\subsection{ALTER}
+
+\subsection{DROP}
+
+\subsection{INSERT}
+
+\section{DML语句}
+
+\subsection{SELECT：查询} 
+Select语句的语句结构如下： 
+\begin{lstlisting} 
+[WITH [RECURSIVE] with_query [, ...]]
+SELECT [ALL | DISTINCT [ON (expression [, ...])]]
+    * | expression [ [AS] output_name ] [, ...]
+[FROM from_item [, ...]]
+[WHERE condition]
+[GROUP BY grouping_element [, ...]]
+[HAVING condition]
+[WINDOW window_name AS (window_definition) [, ...]]
+[{UNION | INTERSECT | EXCEPT} [ALL | DISTINCT] select]
+[ORDER BY expression [ASC | DESC | USING operator] [NULLS {FIRST | LAST}] [, ...]]
+[LIMIT {count | ALL}]
+[OFFSET start [ROW | ROWS]]
+[FETCH {FIRST | NEXT} [count] {ROW | ROWS} ONLY]
+[FOR {UPDATE | NO KEY UPDATE | SHARE | KEY SHARE} [OF table_name [, ...]] [NOWAIT | SKIP LOCKED] [...]]
+\end{lstlisting}
+
+\subsection{UPDATE} 
+
+\subsection{DELETE}
+
+\section{Schema}
+
+\section{Window Function} 
+
+\section{Trigger} 
+
+\section{一些其它语句} 
+\subsection{not in} 
+
+
+
+
+
+
+
+
+
+
+\end{document}
